@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Data.Monoid (mappend)
+import           Data.Monoid ((<>))
 import           Hakyll
 
 
@@ -15,47 +15,51 @@ main = hakyll $ do
         route   idRoute
         compile compressCssCompiler
 
-    match (fromList ["about.rst", "contact.markdown"]) $ do
-        route   $ setExtension "html"
-        compile $ pandocCompiler
-            >>= loadAndApplyTemplate "templates/default.html" defaultContext
-            >>= relativizeUrls
+    create ["index.html", "404.html"] $ do
+      route idRoute
+      compile $
+        getResourceBody
+          >>= loadAndApplyTemplate "templates/default.html" defaultContext
 
-    match "posts/*" $ do
+    match "about.md" $ do
         route $ setExtension "html"
         compile $ pandocCompiler
-            >>= loadAndApplyTemplate "templates/post.html"    postCtx
-            >>= loadAndApplyTemplate "templates/default.html" postCtx
-            >>= relativizeUrls
+            >>= loadAndApplyTemplate "templates/about.html" postCtx
 
-    create ["archive.html"] $ do
-        route idRoute
-        compile $ do
-            posts <- recentFirst =<< loadAll "posts/*"
-            let archiveCtx =
-                    listField "posts" postCtx (return posts) `mappend`
-                    constField "title" "Archives"            `mappend`
-                    defaultContext
+    -- create ["404.html", "index.html"] $ do
+    --   route idRoute
+    --   compile $ do
+    --     load "templates/404.html" :: Compiler (Item String)
 
-            makeItem ""
-                >>= loadAndApplyTemplate "templates/archive.html" archiveCtx
-                >>= loadAndApplyTemplate "templates/default.html" archiveCtx
-                >>= relativizeUrls
+        -- getResourceBody
+        --   >>= loadAndApplyTemplate "templates/default.html" defaultContext
+        --   >>= loadAndApplyTemplate "templates/404.html" defaultContext
+        --   >>= relativizeUrls
 
 
-    match "index.html" $ do
-        route idRoute
-        compile $ do
-            posts <- recentFirst =<< loadAll "posts/*"
-            let indexCtx =
-                    listField "posts" postCtx (return posts) `mappend`
-                    constField "title" "Home"                `mappend`
-                    defaultContext
+    -- match "posts/*" $ do
+    --     route $ setExtension "html"
+    --     compile $ pandocCompiler
+    --         >>= loadAndApplyTemplate "templates/post.html"    postCtx
+    --         >>= loadAndApplyTemplate "templates/default.html" postCtx
+    --         >>= relativizeUrls
 
-            getResourceBody
-                >>= applyAsTemplate indexCtx
-                >>= loadAndApplyTemplate "templates/default.html" indexCtx
-                >>= relativizeUrls
+
+    -- create ["archive.html"] $ do
+    --   route idRoute
+    --   compile $ do
+    --     posts <- recentFirst =<< loadAll "posts/*"
+    --     let archiveCtx =
+    --           listField "posts" postCtx (return posts) <>
+    --           constField "title" "Archives"            <>
+    --           defaultContext
+    --     makeItem ""
+    --             >>= loadAndApplyTemplate "templates/archive.html" archiveCtx
+    --             >>= loadAndApplyTemplate "templates/default.html" archiveCtx
+    --             >>= relativizeUrls
+
+
+
 
     match "templates/*" $ compile templateBodyCompiler
 
